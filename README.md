@@ -179,7 +179,7 @@ conda create -y -n R_4.3.2 r-base==4.3.2 r-tidyverse r-biocmanager r-hdf5r r-dev
 conda activate R_4.3.2
 conda install r-base=4.3.2 bioconductor-motifmatchr bioconductor-tfbstools bioconductor-chromvar bioconductor-bsgenome.hsapiens.ucsc.hg38 bioconductor-ensdb.hsapiens.v86 bioconductor-deseq2 bioconductor-limma r-harmony bioconductor-biocfilecache openssl==3.1.3
 
-conda create -y -n r-reticulate -c vtraag python-igraph pandas umap-learn scanpy macs2 scvi-tools
+conda create -y -n r-reticulate -c vtraag python-igraph pandas umap-learn scanpy macs2 scvi-tools graph-tool
 
 ```
 
