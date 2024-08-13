@@ -234,3 +234,86 @@ Then:
 update.packages(ask = FALSE, checkBuilt = TRUE)
 remotes::install_github(c('satijalab/azimuth', 'satijalab/seurat-data', 'chris-mcginnis-ucsf/DoubletFinder', 'carmonalab/UCell', 'satijalab/seurat-wrappers', 'mojaveazure/seurat-disk'), force = T)
 ```
+
+In July and August 2024, AG Romagnani was migrated from gpfs-1 to cephfs-1/-2. These steps were used during this process:
+
+<details open>
+<summary>Preparing for BIH-CUBI drive migration</summary>
+<br>
+### 1. First, we log into OnDemand and open the terminal by going to the top bar:
+ Clusters -> >_ cubi Shell Access
+
+### 2. Then, we open a terminal multiplex session and begin an interactive session
+`tmux new -s environment_export`  
+`srun --time 24:00:00 --ntasks 16 --mem 16G --immediate=10000 --pty bash -i`
+
+### 3. Finally, we begin the export of the miniconda3 environments
+`source ~/work/bin/miniconda3/etc/profile.d/conda.sh`  
+`bash ~/group/work/bin/miniconda_envs/export_envs.sh`
+
+### 4. Once this is finished, run the following lines
+`conda clean --all -y`  
+`pip cache purge`
+
+### 5. Removing large files from user spaces to improve drive performance
+Only run these if you are sure you know what you're deleting - ask Ollie for guidance  
+`find ~/work/data -name '.bam*' -delete`  
+`find ~/work/data -name '.cloupe*' -delete`  
+`find ~/work/data -name '*molecule_info*' -delete`  
+
+### 6. Exit interactive session
+Now, type and enter `exit` until you leave the interactive session.
+You can also check other active sessions with `tmux ls`, and attach these with `tmux a -t session`, and `exit` these, too.
+</details>
+
+<details open>
+<summary>Following migration to cephfs-1/-2</summary>
+<br>
+<p align="center" style="font-size: 1.5em;">
+  <span style="color: red;">🔴</span> <strong>Note: if you come across any errors while performing this, please check with Ollie, or you risk losing data!🔴</strong>
+</p>
+
+### 1. First, we log into OnDemand and open the terminal by going to the top bar:
+ Clusters -> >_ cubi Shell Access
+
+### 2. Then, we open a terminal multiplex session and begin an interactive session
+`tmux new -s environment_export`  
+`srun --time 48:00:00 --ntasks 16 --mem 16G --immediate=10000 --pty bash -i`
+
+### 3. Firstly, we are going to move all data from the old drive (gpfs-1) to the new drive (cephfs-1)
+```bash
+SOURCE=/data/gpfs-1/work/users/${USER}/work/
+TARGET=/data/cephfs-1/home/users/${USER}/work/
+rsync -ahP --stats $SOURCE $TARGET
+```
+Note that this will take a long time. Furthermore, it will move your *old* miniconda installation, so you will want to either **delete** this or move it with `mv miniconda3 temp` so that it does not get in the way of the re-installation.
+
+Please also check if all of the files were moved:
+```bash
+find $SOURCE -type f | wc -l
+```
+This should output `0`. If not, check what hasn't moved by looking at `ls $SOURCE`.  
+
+Please check through all of your folders in your *new* work folder with `ls` to list files, `cd $folder` (where folder is the folder you want to enter) and `cd ..` to move up one level.
+
+### 4. Secondly, we're going to re-install miniconda and re-create all of the shortcuts
+`bash /data/cephfs-2/unmirrored/groups/romagnani/work/bin/first_time_setup.sh`
+
+Here, you can either create the default `R_4.3.3` and `r-reticulate` environments from nothing using the pre-created ones, or recreate your old ones *if you exported them*
+
+```bash
+source ~/work/bin/miniconda3/etc/profile.d/conda.sh
+
+for env in ~/group/work/bin/miniconda_envs/${USER}/*; do
+    env=$(basename ${env} .yml)
+    echo "Re-creating the ${env} environment"
+    echo ""
+    conda env create -f ~/group/work/bin/miniconda_envs/${USER}/${env}.yml
+    echo ""
+done
+```
+
+### 6. Exit interactive session
+Now, type and enter `exit` until you leave the interactive session.
+You can also check other active sessions with `tmux ls`, and attach these with `tmux a -t session`, and `exit` these, too.
+</details>
