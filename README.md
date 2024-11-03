@@ -12,10 +12,10 @@ If you run into trouble using any part of the HPC, heres an order of where to lo
 
 # Contents
 
-**[VPN access and requesting an account]()**  
-**[Connecting to the cluster]()**  
-**[Setting up your work environment]()**  
-**[Setting up an RStudio session]()**  
+**[VPN access and requesting an account](https://github.com/ollieeknight/bih-cubi/tree/main?tab=readme-ov-file#vpn-access-and-requesting-an-account)**  
+**[Connecting to the cluster](https://github.com/ollieeknight/bih-cubi/tree/main?tab=readme-ov-file#vpn-access-and-requesting-an-account)**  
+**[Setting up your work environment](https://github.com/ollieeknight/bih-cubi/tree/main?tab=readme-ov-file#vpn-access-and-requesting-an-account)**  
+**[Setting up an RStudio session](https://github.com/ollieeknight/bih-cubi/tree/main?tab=readme-ov-file#vpn-access-and-requesting-an-account)**  
 
 
 # VPN access and requesting an account
@@ -129,8 +129,6 @@ srun --time 48:00:00 --ntasks 16 --mem 32G --immediate=10000 --pty bash -i
 This creates a session which will last 48h, allow you to use 16 CPU cores, and 32Gb RAM. From here, we can install software, packages, extract files and run programs.
 
 **2. Setting up a workspace environment**
-
-# Workspace Setup on BIH-CUBI Cluster
 
 To set up your workspace on the BIH-CUBI cluster, follow the structure outlined below. The arrangement is designed for optimal organisation of your files and efficient use of available resources:
 
