@@ -2,7 +2,7 @@
 
 The Romagnani lab uses the [Berlin Institute of Health-Core Bioinformatics Unit (BIH-CUBI) High Performance Computing (HPC) cluster](https://www.hpc.bihealth.org/) for computational work.
 
-For RStudio and JupterLab, go to the >> **[BIH Dashboard](https://hpc-portal.cubi.bihealth.org/pun/sys/dashboard/)** <<
+For RStudio and JupterLab access, go to the >> **[BIH Dashboard](https://hpc-portal.cubi.bihealth.org/pun/sys/dashboard/)** <<
 
 If you run into trouble using any part of the HPC, heres an order of where to look for guidance:  
 1. The BIH-CUBI HPC [documents](https://bihealth.github.io/bih-cluster/)
@@ -91,10 +91,10 @@ Host cubi
     User username_c
     RequestTTY yes
 
-Host cubi
+Host cubi2
     ForwardAgent yes
     ForwardX11 yes
-    HostName hpc-login-1.cubi.bihealth.org
+    HostName hpc-login-2.cubi.bihealth.org
     User username_c
     RequestTTY yes
 ```
@@ -130,60 +130,64 @@ This creates a session which will last 48h, allow you to use 16 CPU cores, and 3
 
 **2. Setting up a workspace environment**
 
-From here, how you set up your workspace is entirely your decision. However the file structure of the BIH-CUBI cluster is set up like this:
+# Workspace Setup on BIH-CUBI Cluster
 
-- Your home directory, `$HOME/`, or also sometimes written `/fast/users/$USER`, is only 1Gb in space and should not contain anything other than *links* to other folders; already set up are `/fast/scratch/users/${USER}` and `/fast/work/users/${USER}`. You can always check wherever you are with `pwd`.  
-- Your `$HOME/scratch` folder has a quota of 200 Tb; however, files are deleted after 2 weeks from the time of their creation. This will be where large data such as sequencing runs and processing pipelines are run.
-- Your `$HOME/work` folder has a hard quota of 1 Tb and is for non-group personal use.
-- Finally, there is the `/fast/groups/ag_romagnani/` folder, where communal programs, scripts and reference genomes/files are kept.  
+To set up your workspace on the BIH-CUBI cluster, follow the structure outlined below. The arrangement is designed for optimal organisation of your files and efficient use of available resources:
 
-You can at any time check your quota with the command `bih-gpfs-quota-user $USER`
+## Home Directory
+Your home directory is located at `/data/cephfs-1/home/users/$USER`. This space is limited to 1 GB and should only contain *links* to other folders. You can check your current location with the command `pwd`.
 
-Below is a set of instructions to install miniconda3, which is required to install Seurat and other R packages. However, you can skip this and hopefully run a command with this to get everything looking nice:
+## Scratch Folder
+The scratch directory is at `/data/cephfs-1/home/users/$USER/scratch`, with a quota of 200 TB. Note that files are automatically deleted after 2 weeks from their creation date. This is where you should run large data sets, such as sequencing runs and processing pipelines.
+
+## Work Folder
+Your work directory can be found at `/data/cephfs-1/home/users/$USER/work`, with a hard quota of 1 TB. This space is designated for non-group personal use.
+
+## Group Folder
+Communal programs, scripts, and reference genomes/files are stored in `/data/cephfs-1/home/groups/ag_romagnani/`.
+
+Below is a set of instructions to install miniforge3, which is required to install Seurat and other R packages. However, you can skip this and hopefully run a command with this to get everything looking nice:
 
 ```bash
-bash /fast/work/groups/ag_romagnani/bin/first_time_setup.sh
+bash /data/cephfs-2/unmirrored/groups/romagnani/work/bin/first_time_setup.sh
 ```
 
-
 ```bash
-# link the group folder, and set up your work/bin/ folder
-ln -s /fast/work/groups/ag_romagnani/ group
-mkdir $HOME/work/bin/ && cd $HOME/work/bin/
+bin_folder=/data/cephfs-1/work/groups/romagnani/users/${USER}/bin
+mkdir $bin_folder && cd $bin_folder
 
-# download, install, and update miniconda 
-curl -L https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/work/bin/miniconda3 && rm Miniconda3-latest-Linux-x86_64.sh
-source ${HOME}/work/bin/miniconda3/etc/profile.d/conda.sh && conda activate
+# download, install, and update miniforge 
+cd ${bin_folder}
+curl -L https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -o Miniforge3-Linux-x86_64.sh
+bash Miniforge3-Linux-x86_64.sh -b -p ${bin_folder}/miniforge3/
+rm Miniforge3-Linux-x86_64.sh
 
 # modify conda repositories  
-nano $HOME/.condarc
+nano ${HOME}/.condarc
 
 # copy and paste this into nano (CTRL+C here, right click to paste)
 channels:
-  - conda-forge
-  - bioconda
-  - bih-cubi
-  - defaults
+  - https://prefix.dev/conda-forge
+  - https://prefix.dev/pytorch
+  - https://prefix.dev/bioconda
 show_channel_urls: true
 changeps1: true
-channel_priority: strict
+channel_priority: flexible
+
 # close by CTRL+X and y and enter
 
 conda upgrade --all -y
-conda config --set solver libmamba
-echo "source ${bin_folder}/miniconda3/etc/profile.d/conda.sh" >> ${HOME}/.bashrc
+echo "" >> ${HOME}/.bashrc
+echo "source ${bin_folder}/miniforge3/etc/profile.d/conda.sh" >> ${HOME}/.bashrc
 
 # If you'd like to make a conda env now for single cell analysis in R, run these steps:  
-conda create -y -n R_4.3.2 r-base==4.3.3 r-tidyverse r-biocmanager r-hdf5r r-devtools r-r.utils r-seurat r-signac r-leiden r-matrix r-pals r-ggsci r-ggthemes r-showtext r-ggtext r-ggpubr r-ggridges r-ggtext r-ggh4x openssl==3.1.3
-conda activate R_4.3.2
-conda install r-base=4.3.2 bioconductor-motifmatchr bioconductor-tfbstools bioconductor-chromvar bioconductor-bsgenome.hsapiens.ucsc.hg38 bioconductor-ensdb.hsapiens.v86 bioconductor-deseq2 bioconductor-limma r-harmony bioconductor-biocfilecache openssl==3.1.3
+conda create -y -n R_4.3.3 r-base r-tidyverse r-biocmanager r-hdf5r r-devtools r-r.utils r-seurat r-signac r-leiden r-matrix r-pals r-ggsci r-ggthemes r-showtext r-ggpubr r-ggridges r-ggtext r-ggh4x bioconductor-motifmatchr bioconductor-tfbstools bioconductor-chromvar bioconductor-bsgenome.hsapiens.ucsc.hg38 bioconductor-ensdb.hsapiens.v86 bioconductor-deseq2 bioconductor-limma r-harmony bioconductor-biocfilecache
 
-conda create -y -n r-reticulate -c vtraag python-igraph pandas umap-learn scanpy macs2 scvi-tools
+conda create -y -n r-reticulate -c vtraag python-igraph pandas umap-learn scanpy macs2
 
 ```
 
-In the above script, we make a folder called `bin` in your work directory, and then download and install miniconda. We then use it to create our R environment named `R_4.3.3`, but you can name this whatever you want.
+In the above script, we make a folder called `bin` in your work directory, and then download and install miniforge. We then use it to create our R environment named `R_4.3.3`, but you can name this whatever you want.
 
 If at any point you come into errors installing packages through RStudio directly, try using this format while in the `R_4.3.3` conda environment: `conda install r-package`, replacing the word 'package' with what you want to install. The 'r-' prefix indicates it's an `R` package, and not a `python` one.
 
@@ -196,8 +200,8 @@ If at any point you come into errors installing packages through RStudio directl
 From here, you can customise the session you want:
 
 ```bash
-**R source:** change to miniconda  
-**Miniconda path:** $HOME/bin/miniconda3/bin:R_4.3.3 # or whatever you named the environment to be
+**R source:** change to miniforge  
+**miniforge path:** ~/work/bin/miniforge3/bin:R_4.3.3 # or whatever you named the environment to be
 **Apptainer image:** *leave as is*  
 **Number of cores:** Maximum 32
 **Memory [GiB]:** Maximum 128  
@@ -207,20 +211,19 @@ From here, you can customise the session you want:
 
 When you launch this, it will queue the request as it goes through the `slurm` workload manager. It will then automatically update when it is running, and you can launch the session. If it is taking too long, reduce the cores, memory, and running time. 16 cores, 64 Gb RAM, and 1 day often works well.
 
-**5.** Finallising our R environment, we move back to ondemand, launch a session once more, and perform these steps:
+**5.** Finalising our R environment, we move back to ondemand, launch a session once more, and perform these steps:
 
 At the beginning of your script, you must let R know where your python environment is to use reticulate:
 
 ```R
-Sys.setenv(PATH = paste('~/work/bin/miniconda3/envs/r-reticulate/lib/python3.10/site-packages/', Sys.getenv()['PATH'], sep = ':'))
+Sys.setenv(PATH = paste('~/work/bin/miniforge3/envs/r-reticulate/lib/python3.10/site-packages/', Sys.getenv()['PATH'], sep = ':'))
 library(reticulate)
 assignInNamespace('is_conda_python', function(x){ return(FALSE) }, ns = 'reticulate')
-use_miniconda('~/work/bin/miniconda3/envs/r-reticulate/', required = T)
+use_condaenv('~/work/bin/miniforge3/envs/r-reticulate/', required = T)
 ```
 
 Then install some extra packages...
 
 ```R
-update.packages(ask = FALSE, checkBuilt = TRUE)
 remotes::install_github(c('satijalab/azimuth', 'satijalab/seurat-data', 'chris-mcginnis-ucsf/DoubletFinder', 'carmonalab/UCell', 'satijalab/seurat-wrappers', 'mojaveazure/seurat-disk'), force = T)
 ```
